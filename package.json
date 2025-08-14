@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --inspect src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
@@ -15,6 +15,7 @@
   "description": "",
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.3",
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "dotenv": "^17.2.1"
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
   }
 }

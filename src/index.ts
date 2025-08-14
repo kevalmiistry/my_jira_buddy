@@ -3,6 +3,7 @@ import { jiraConfig } from "./config/jiraConfig";
 import { JiraUser } from "./types";
 import express from "express";
 import type { Request, Response } from "express";
+import { extractEpicKey } from "./utils/extractEpicKey";
 
 const app = express();
 
@@ -65,7 +66,40 @@ const createNewTask = async (_: Request, res: Response) => {
     }
 };
 
+interface GetEpicDetailsQuery {
+    epic: string;
+}
+
+const getEpicSummary = async (
+    req: Request<any, any, any, GetEpicDetailsQuery>,
+    res: Response
+) => {
+    try {
+        const { epic } = req.query;
+
+        const epicKey = extractEpicKey(epic);
+
+        if (!epicKey) {
+            throw Error("No valid epic issue key found!");
+        }
+
+        const { data } = await axios.get(
+            `${jiraConfig.url}/rest/api/3/issue/${epicKey}`,
+            { headers: authHeader }
+        );
+
+        const epicSummary = data?.fields?.summary || "-";
+
+        res.status(200).json({ epicSummary });
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            res.status(400).json(error.response?.data);
+        }
+    }
+};
+
 app.post("/api/create", createNewTask);
+app.get("/api/epic", getEpicSummary);
 
 app.listen(1234, () => {
     console.log("Server is running on port: 1234");

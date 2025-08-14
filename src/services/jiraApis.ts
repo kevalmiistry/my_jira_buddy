@@ -33,7 +33,10 @@ interface GetEpicSummary {
 
 export const getEpicSummary = async ({
     epic,
-}: GetEpicSummary): Promise<string | null> => {
+}: GetEpicSummary): Promise<{
+    epicKey: string;
+    epicSummary: string;
+} | null> => {
     try {
         const epicKey = extractEpicKey(epic);
 
@@ -48,7 +51,7 @@ export const getEpicSummary = async ({
 
         const epicSummary = data?.fields?.summary || null;
 
-        return epicSummary;
+        return { epicKey, epicSummary };
     } catch (error) {
         return null;
     }

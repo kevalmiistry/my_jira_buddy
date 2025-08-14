@@ -31,9 +31,11 @@
     "axios": "^1.11.0",
     "boxen": "^8.0.1",
     "chalk": "^5.5.0",
+    "csv-parse": "^6.1.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "inquirer": "^12.9.2"
+    "inquirer": "^12.9.2",
+    "zod": "^4.0.17"
   },
   "bin": {
     "my_jira_buddy": "./dist/index.js"

@@ -1,28 +1,33 @@
-#!/usr/bin / env node
+#!/usr/bin/env node
 
 import inquirer from "inquirer";
-import {
-    createNewTask,
-    getCurrentUser,
-    getEpicSummary,
-} from "./services/jiraApis";
+import { createNewTask, getCurrentUser, getEpicSummary } from "./services/jira";
 import chalk from "chalk";
 import { textInBox } from "./utils/textInBox";
 import { fetchSheetData } from "./services/googleSheets";
 import { convertHoursToStoryPoint } from "./utils/convertHoursToStoryPoint";
+import ora from "ora";
 
 async function main() {
     try {
         // Step: 1
-        console.log("\nHello There!");
-        console.log("Getting Your Jira Account Details...\n");
+        console.log(chalk.green(chalk.bold("\nHello There!\n")));
+
+        const accountSpinner = ora(
+            "Fetching your Jira account details...\n"
+        ).start();
 
         const userDetails = await getCurrentUser();
 
         if (!userDetails) {
-            console.log("Oops! Couldn't fetch your Jira account details!");
+            accountSpinner.fail(
+                "Oops! Couldn't fetch your Jira account details!"
+            );
             return;
         }
+        accountSpinner.succeed(
+            "Successfully fetched your Jira account details!"
+        );
 
         const nameAndEmail = textInBox({
             content: `${chalk.bold(userDetails.displayName)}\n${chalk.gray(userDetails.emailAddress)}`,
@@ -44,6 +49,8 @@ async function main() {
             return;
         }
 
+        console.log("");
+
         // Step: 3
         const { epic_link } = await inquirer.prompt([
             {
@@ -53,13 +60,17 @@ async function main() {
             },
         ]);
 
+        const epicSpinner = ora("Fetching epic ticket details...\n").start();
+
         const epicDetails = await getEpicSummary({ epic: epic_link });
         if (!epicDetails) {
-            console.log(
-                "Oops! Couldn't fetch epic ticket details! Are you sure is it correct link?"
+            epicSpinner.fail(
+                "Oops! Couldn't fetch epic ticket details! Are you sure its correct link?"
             );
             return;
         }
+        epicSpinner.succeed("Successfully fetched epic ticket details!");
+
         const { epicKey, epicSummary } = epicDetails;
 
         const epicSummaryBox = textInBox({
@@ -82,6 +93,7 @@ async function main() {
             console.log("Closing Session!");
             return;
         }
+        console.log("");
 
         // Step: 5
         const { sheet_link } = await inquirer.prompt([
@@ -92,22 +104,24 @@ async function main() {
             },
         ]);
 
-        console.log("Fetching data from the sheet...");
+        const sheetSpinner = ora("Fetching data from the sheet...").start();
 
         const tasksAndHours = await fetchSheetData({
             sheetURL: sheet_link,
         });
 
         if (!tasksAndHours) {
-            console.log(
-                `\nOops! Couldn't fetch sheet's data! Make your sheet is shared ${chalk.bgBlackBright(" Anyone with the link ")} and have data in correct format ${chalk.bgBlackBright(" task, hours ")}`
+            sheetSpinner.fail(
+                `Oops! Couldn't fetch sheet's data! Make sure your sheet is shared ${chalk.bgBlackBright(
+                    " Anyone with the link "
+                )} and has correct format ${chalk.bgBlackBright(" task, hours ")}`
             );
             return;
         }
 
-        console.log("\nFetched data successfully! ✅");
+        sheetSpinner.succeed("Fetched data successfully! ✅");
         console.table(tasksAndHours);
-        console.log("\n");
+        console.log("");
 
         // Step: 6
         const { is_want_create_tasks } = await inquirer.prompt([
@@ -122,7 +136,7 @@ async function main() {
             console.log("Closing Session!");
             return;
         }
-        console.log("\n");
+        console.log("");
 
         const { is_want_create_tasks_confirmed } = await inquirer.prompt([
             {
@@ -137,9 +151,10 @@ async function main() {
             return;
         }
 
-        console.log(
-            "Creating task. Please wait and don't close the process..."
-        );
+        console.log("\n");
+        const createTasksSpinner = ora(
+            "Creating tasks, Please wait and don't cancel the process..."
+        ).start();
 
         const tasksCreationPromised = tasksAndHours.map(({ task, hours }) => {
             return createNewTask({
@@ -165,8 +180,10 @@ async function main() {
             return acc;
         }, 0);
 
-        console.log(
-            `\n Process complete with ${chalk.bgBlackBright(` ${successCount}/${tasksAndHours.length} `)} tasks created and ${chalk.bgBlackBright(` ${failedCount}/${tasksAndHours.length} `)} failed!`
+        console.log("\n");
+
+        createTasksSpinner.succeed(
+            `Process completed with ${chalk.bgBlackBright(` ${successCount}/${tasksAndHours.length} `)} tasks created and ${chalk.bgBlackBright(` ${failedCount}/${tasksAndHours.length} `)} failed!\n\n ${chalk.bgMagenta(" HAPPY CODING! ")} \n`
         );
     } catch (err: unknown) {
         if (err && typeof err === "object" && "name" in err) {

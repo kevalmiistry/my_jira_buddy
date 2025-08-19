@@ -2,6 +2,8 @@ import axios from "axios";
 import { JiraUser } from "../types";
 import { jiraConfig } from "../config/jiraConfig";
 import { extractEpicKey } from "../utils/extractEpicKey";
+import { convertHoursToJiraTimeWithDays } from "../utils/convertHoursToJiraTimeWithDays";
+import { convertHoursToStoryPoint } from "../utils/convertHoursToStoryPoint";
 
 const authHeader = {
     Authorization: `Basic ${Buffer.from(
@@ -60,14 +62,14 @@ export const getEpicSummary = async ({
 interface CreateNewTask {
     summary: string;
     epicKey: string;
-    storyPoint: number;
+    hours: number;
     accountId: string;
 }
 
 export const createNewTask = async ({
     accountId,
     epicKey,
-    storyPoint,
+    hours,
     summary,
 }: CreateNewTask): Promise<boolean> => {
     try {
@@ -77,10 +79,13 @@ export const createNewTask = async ({
                 summary,
                 issuetype: { name: "Task" },
                 customfield_10014: epicKey, // Epic Link (e.g.: IN-123)
-                customfield_10034: storyPoint, // Story Points
+                customfield_10034: convertHoursToStoryPoint(hours), // Story Points
                 customfield_10498: [
                     { id: accountId }, // Assigned Developer (accountId)
                 ],
+                timetracking: {
+                    originalEstimate: convertHoursToJiraTimeWithDays(hours),
+                },
             },
         };
 

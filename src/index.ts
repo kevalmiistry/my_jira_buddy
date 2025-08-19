@@ -5,7 +5,6 @@ import { createNewTask, getCurrentUser, getEpicSummary } from "./services/jira";
 import chalk from "chalk";
 import { textInBox } from "./utils/textInBox";
 import { fetchSheetData } from "./services/googleSheets";
-import { convertHoursToStoryPoint } from "./utils/convertHoursToStoryPoint";
 import ora from "ora";
 
 async function main() {
@@ -160,7 +159,7 @@ async function main() {
             return createNewTask({
                 accountId: userDetails.accountId,
                 epicKey,
-                storyPoint: convertHoursToStoryPoint(hours),
+                hours,
                 summary: task,
             });
         });

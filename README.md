@@ -1,6 +1,6 @@
 # my\_jira\_buddy
 
-A personal CLI tool to quickly create Jira **Task** issues under a parent **Epic**, with summary, story points, and assigned developer.
+A personal CLI tool to quickly create Jira **Task** issues under a parent **Epic**, with summary, story points, original estimated time and assigned developer.
 
 🎬 **Demo:**
 
